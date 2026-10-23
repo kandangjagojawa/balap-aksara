@@ -13,6 +13,12 @@ let totalRaceQuestions = 0;
 let currentQuestion = null;
 let questionStartTime = 0;
 
+// Timer State
+let raceDuration = 30;
+let hostTimerInterval = null;
+let hostTimeLeft = 0;
+let playerTimerInterval = null;
+
 // Player State
 let playerProfile = { name: '', avatar: '🏎️' };
 let playerConn = null;
@@ -254,6 +260,8 @@ function startRaceHost() {
     return;
   }
 
+  raceDuration = parseInt(document.getElementById('selectTimer').value) || 30;
+
   activeQuestions = soalData.filter(s => selectedLevels.includes(s.level));
   if (activeQuestions.length === 0) {
     alert("Tidak ada soal tersedia!");
@@ -279,6 +287,22 @@ function broadcastQuestionToPlayers() {
   document.getElementById('hostTargetLatin').innerText = `Soal ${currentQuestionIndex + 1}/${activeQuestions.length} - ${currentQuestion.title}: "${currentQuestion.latin}"`;
   document.getElementById('hostTargetAksara').innerText = currentQuestion.aksara;
 
+  // Jalankan Timer Otomatis pada Host
+  hostTimeLeft = raceDuration;
+  document.getElementById('hostTimerBadge').style.display = 'inline-flex';
+  document.getElementById('hostTimeLeft').innerText = hostTimeLeft;
+
+  if (hostTimerInterval) clearInterval(hostTimerInterval);
+  hostTimerInterval = setInterval(() => {
+    hostTimeLeft--;
+    document.getElementById('hostTimeLeft').innerText = hostTimeLeft;
+
+    if (hostTimeLeft <= 0) {
+      clearInterval(hostTimerInterval);
+      nextQuestionHost(); // Otomatis lanjut soal saat durasi habis
+    }
+  }, 1000);
+
   Object.keys(hostConnMap).forEach(peerId => {
     hostConnMap[peerId].progressPercent = 0;
     hostConnMap[peerId].finished = false;
@@ -293,7 +317,8 @@ function broadcastQuestionToPlayers() {
     type: 'START_QUESTION',
     questionIndex: currentQuestionIndex,
     totalQuestions: activeQuestions.length,
-    question: currentQuestion
+    question: currentQuestion,
+    duration: raceDuration
   };
 
   Object.values(hostConnMap).forEach(p => {
@@ -302,6 +327,8 @@ function broadcastQuestionToPlayers() {
 }
 
 function nextQuestionHost() {
+  if (hostTimerInterval) clearInterval(hostTimerInterval);
+
   if (currentQuestionIndex + 1 < activeQuestions.length) {
     currentQuestionIndex++;
     broadcastQuestionToPlayers();
@@ -311,6 +338,9 @@ function nextQuestionHost() {
 }
 
 function endRaceHost() {
+  if (hostTimerInterval) clearInterval(hostTimerInterval);
+  document.getElementById('hostTimerBadge').style.display = 'none';
+
   const players = Object.values(hostConnMap);
   players.sort((a, b) => b.score - a.score || a.totalTimeSpent - b.totalTimeSpent);
 
@@ -377,6 +407,7 @@ function renderLeaderboardModal(leaderboardData, isHost = false) {
 }
 
 function resetForNewGameHost() {
+  if (hostTimerInterval) clearInterval(hostTimerInterval);
   document.getElementById('podiumModal').classList.remove('active');
 
   Object.keys(hostConnMap).forEach(peerId => {
@@ -394,6 +425,7 @@ function resetForNewGameHost() {
 
   document.getElementById('hostTargetLatin').innerText = "Menunggu balapan baru dimulai...";
   document.getElementById('hostTargetAksara').innerText = "ꦱꦸꦒꦼꦁꦫꦮꦸꦃ";
+  document.getElementById('hostTimerBadge').style.display = 'none';
 
   renderRaceTrack();
 
@@ -447,13 +479,33 @@ function handlePlayerIncomingData(data) {
     playerTypedText = '';
     playerIsFinished = false;
 
+    // Timer Siswa
+    let playerTimeLeft = data.duration || 30;
+    document.getElementById('pTimeLeft').innerText = playerTimeLeft;
+
+    if (playerTimerInterval) clearInterval(playerTimerInterval);
+    playerTimerInterval = setInterval(() => {
+      playerTimeLeft--;
+      if (playerTimeLeft < 0) playerTimeLeft = 0;
+      document.getElementById('pTimeLeft').innerText = playerTimeLeft;
+
+      if (playerTimeLeft <= 0) {
+        clearInterval(playerTimerInterval);
+        if (!playerIsFinished) {
+          document.getElementById('pPosIndicator').innerText = "Waktu Habis! ⌛";
+        }
+      }
+    }, 1000);
+
     renderPlayerGameScreen();
     showView('playerGame');
   } 
   else if (data.type === 'GAME_ENDED') {
+    if (playerTimerInterval) clearInterval(playerTimerInterval);
     renderLeaderboardModal(data.leaderboard, false);
   }
   else if (data.type === 'RESET_TO_LOBBY') {
+    if (playerTimerInterval) clearInterval(playerTimerInterval);
     document.getElementById('podiumModal').classList.remove('active');
     showView('playerWaiting');
   }
@@ -469,10 +521,7 @@ function renderPlayerGameScreen() {
   
   updatePlayerProgressBar(0);
 
-  // Teks Latin menampilkan spasi
   document.getElementById('pLatinWords').innerText = currentQuestion.latin;
-  
-  // Teks Aksara Jawa ditampilkan utuh
   document.getElementById('pAksaraWords').innerText = currentQuestion.aksara;
 }
 
@@ -488,16 +537,15 @@ function setupVirtualKeyboard() {
   document.getElementById('btnKbClear').addEventListener('click', () => {
     playerTypedText = '';
     updateTypedDisplay();
-    checkAnswerAndAdvance(false);
+    checkAnswerAndAdvance();
   });
-  document.getElementById('btnKbSpace').addEventListener('click', () => checkAnswerAndAdvance(true));
 }
 
 function appendPlayerChar(char) {
   if (playerIsFinished) return;
   playerTypedText += char;
   updateTypedDisplay();
-  checkAnswerAndAdvance(false);
+  checkAnswerAndAdvance();
 }
 
 function removePlayerChar() {
@@ -506,20 +554,20 @@ function removePlayerChar() {
   chars.pop();
   playerTypedText = chars.join('');
   updateTypedDisplay();
-  checkAnswerAndAdvance(false);
+  checkAnswerAndAdvance();
 }
 
 function updateTypedDisplay() {
   document.getElementById('pTypedDisplay').innerText = playerTypedText;
 }
 
-function checkAnswerAndAdvance(forcedBySubmit) {
+function checkAnswerAndAdvance() {
   if (playerIsFinished || !currentQuestion) return;
 
   const targetAksara = currentQuestion.aksara.trim();
   const typedTrimmed = playerTypedText.trim();
 
-  // Hitung jumlah karakter yang cocok dari awal
+  // Hitung persentase kecocokan karakter dari depan
   const targetChars = Array.from(targetAksara);
   const typedChars = Array.from(typedTrimmed);
   
@@ -534,11 +582,16 @@ function checkAnswerAndAdvance(forcedBySubmit) {
 
   let progressPercent = Math.min(99, Math.round((matchedCount / targetChars.length) * 100));
 
-  // Otomatis Selesai jika teks tepat cocok 100%
-  if (typedTrimmed === targetAksara || (forcedBySubmit && typedTrimmed === targetAksara)) {
+  // JIKA JAWABAN TEPAT 100% (BENAR)
+  if (typedTrimmed === targetAksara) {
     progressPercent = 100;
     playerIsFinished = true;
     const timeSpent = Math.max(1, Math.round((Date.now() - questionStartTime) / 1000));
+    
+    // Kosongkan hasil ketikan siswa seketika saat benar
+    playerTypedText = '';
+    updateTypedDisplay();
+
     document.getElementById('pPosIndicator').innerText = `FINISH 🏁 (${timeSpent}s)`;
 
     if (playerConn && playerConn.open) {
@@ -548,7 +601,9 @@ function checkAnswerAndAdvance(forcedBySubmit) {
         timeSpent: timeSpent
       });
     }
-  } else {
+  } 
+  // JIKA JAWABAN BELUM TEPAT (Tetap simpan teks agar siswa bisa mengeditnya)
+  else {
     document.getElementById('pPosIndicator').innerText = `Progress: ${progressPercent}%`;
     if (playerConn && playerConn.open) {
       playerConn.send({
