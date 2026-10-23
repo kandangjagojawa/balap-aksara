@@ -3,8 +3,8 @@
     "id": 1,
     "level": 1,
     "title": "Aksara Nglegena 1",
-    "latin": "hana caraka",
-    "aksara": "ꦲꦤ ꦕꦫꦏ",
+    "latin": "hanacaraka",
+    "aksara": "ꦲꦤꦕꦫꦏ",
     "words": [
       {
         "latin": "hana",
@@ -20,8 +20,8 @@
     "id": 2,
     "level": 1,
     "title": "Aksara Nglegena 2",
-    "latin": "data sawala",
-    "aksara": "ꦢꦠ ꦱꦮꦭ",
+    "latin": "datasawala",
+    "aksara": "ꦢꦠꦱꦮꦭ",
     "words": [
       {
         "latin": "data",
@@ -37,8 +37,8 @@
     "id": 3,
     "level": 1,
     "title": "Aksara Nglegena 3",
-    "latin": "padha jayanya",
-    "aksara": "ꦥꦝ ꦗꦪꦚ",
+    "latin": "padhajayanya",
+    "aksara": "ꦥꦝꦗꦪꦚ",
     "words": [
       {
         "latin": "padha",
@@ -55,7 +55,7 @@
     "level": 1,
     "title": "Aksara Nglegena 4",
     "latin": "maga bathanga",
-    "aksara": "ꦩꦒ ꦧꦛꦔ",
+    "aksara": "ꦩꦒꦧꦛꦔ",
     "words": [
       {
         "latin": "maga",
@@ -72,7 +72,7 @@
     "level": 2,
     "title": "Sandhangan Swara 1",
     "latin": "tuku buku",
-    "aksara": "ꦠꦸꦏꦸ ꦧꦸꦏꦸ",
+    "aksara": "ꦠꦸꦏꦸꦧꦸꦏꦸ",
     "words": [
       {
         "latin": "tuku",
@@ -89,7 +89,7 @@
     "level": 2,
     "title": "Sandhangan Swara 2",
     "latin": "siti soto",
-    "aksara": "ꦱꦶꦠꦶ ꦱꦺꦴꦠꦺꦴ",
+    "aksara": "ꦱꦶꦠꦶꦱꦺꦴꦠꦺꦴ",
     "words": [
       {
         "latin": "siti",
@@ -106,7 +106,7 @@
     "level": 2,
     "title": "Sandhangan Swara 3",
     "latin": "sate sate",
-    "aksara": "ꦱꦠꦺ ꦱꦠꦺ",
+    "aksara": "ꦱꦠꦺꦱꦠꦺ",
     "words": [
       {
         "latin": "sate",
@@ -122,8 +122,8 @@
     "id": 8,
     "level": 3,
     "title": "Sandhangan Panyigeg 1",
-    "latin": "kangkung segar",
-    "aksara": "ꦏꦁꦏꦸꦁ ꦱꦼꦒꦂ",
+    "latin": "kangkung seger",
+    "aksara": "ꦏꦁꦏꦸꦁꦱꦼꦒꦼꦂ",
     "words": [
       {
         "latin": "kangkung",
@@ -131,7 +131,7 @@
       },
       {
         "latin": "segar",
-        "aksara": "ꦱꦼꦒꦂ"
+        "aksara": "ꦱꦼꦒꦼꦂ"
       }
     ]
   },
@@ -140,7 +140,7 @@
     "level": 3,
     "title": "Sandhangan Panyigeg 2",
     "latin": "gajah pasar",
-    "aksara": "ꦒꦗꦃ ꦥꦱꦂ",
+    "aksara": "ꦒꦗꦃꦥꦱꦂ",
     "words": [
       {
         "latin": "gajah",
@@ -155,9 +155,9 @@
   {
     "id": 10,
     "level": 4,
-    "title": "Paribasan Jawa 1",
+    "title": "Paribasan Jawa",
     "latin": "rura basa",
-    "aksara": "ꦫꦸꦫ ꦧꦱ",
+    "aksara": "ꦫꦸꦫꦧꦱ",
     "words": [
       {
         "latin": "rura",
@@ -171,35 +171,69 @@
   },
   {
     "id": 11,
-    "level": 4,
-    "title": "Paribasan Jawa 2",
-    "latin": "mangan roti",
-    "aksara": "ꦩꦔꦤ꧀ ꦫꦺꦴꦠꦶ",
+    "level": 5,
+    "title": "Sandhangan Wyanjana 1 (Cakra)",
+    "latin": "krama desa",
+    "aksara": "ꦏꦿꦩꦢꦺꦱ",
+    "words": [
+      {
+        "latin": "krama",
+        "aksara": "ꦏꦿꦩ"
+      },
+      {
+        "latin": "desa",
+        "aksara": "ꦢꦺꦱ"
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "level": 5,
+    "title": "Sandhangan Wyanjana 2 (Keret & Pengkal)",
+    "latin": "srengenge setya",
+    "aksara": "ꦱꦽꦔꦺꦔꦺꦱꦼꦠꦾ",
+    "words": [
+      {
+        "latin": "srengenge",
+        "aksara": "ꦱꦽꦔꦺꦔꦺ"
+      },
+      {
+        "latin": "setya",
+        "aksara": "ꦱꦼꦠꦾ"
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "level": 6,
+    "title": "Pasangan 1",
+    "latin": "anak sapi",
+    "aksara": "ꦲꦤꦏ꧀ꦱꦥꦶ",
+    "words": [
+      {
+        "latin": "anak",
+        "aksara": "ꦲꦤꦏ꧀"
+      },
+      {
+        "latin": "sapi",
+        "aksara": "ꦱꦥꦶ"
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "level": 6,
+    "title": "Pasangan 2",
+    "latin": "mangan tahu",
+    "aksara": "ꦩꦔꦤ꧀ꦠꦲꦸ",
     "words": [
       {
         "latin": "mangan",
         "aksara": "ꦩꦔꦤ꧀"
       },
       {
-        "latin": "roti",
-        "aksara": "ꦫꦺꦴꦠꦶ"
-      }
-    ]
-  },
-  {
-    "id": 12,
-    "level": 4,
-    "title": "Unggah Ungguh",
-    "latin": "sugeng rawuh",
-    "aksara": "ꦱꦸꦒꦼꦁ ꦫꦮꦸꦃ",
-    "words": [
-      {
-        "latin": "sugeng",
-        "aksara": "ꦱꦸꦒꦼꦁ"
-      },
-      {
-        "latin": "rawuh",
-        "aksara": "ꦫꦮꦸꦃ"
+        "latin": "tahu",
+        "aksara": "ꦠꦲꦸ"
       }
     ]
   }
