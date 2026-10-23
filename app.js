@@ -9,6 +9,7 @@ let role = null;
 let roomCode = '';
 let activeQuestions = [];
 let currentQuestionIndex = 0;
+let totalRaceQuestions = 0;
 let currentQuestion = null;
 let questionStartTime = 0;
 
@@ -16,7 +17,6 @@ let questionStartTime = 0;
 let playerProfile = { name: '', avatar: '🏎️' };
 let playerConn = null;
 let playerTypedText = '';
-let playerCurrentWordIdx = 0;
 let playerIsFinished = false;
 
 const views = {
@@ -156,7 +156,6 @@ function handleHostIncomingData(conn, data) {
       conn: conn,
       name: data.name,
       avatar: data.avatar || '🏎️',
-      wordIdx: 0,
       progressPercent: 0,
       finished: false,
       finishTime: null,
@@ -173,7 +172,6 @@ function handleHostIncomingData(conn, data) {
   else if (data.type === 'PROGRESS') {
     const player = hostConnMap[conn.peer];
     if (player) {
-      player.wordIdx = data.wordIdx;
       player.progressPercent = data.progressPercent;
       
       updatePlayerTrackPosition(conn.peer, data.progressPercent);
@@ -282,7 +280,6 @@ function broadcastQuestionToPlayers() {
   document.getElementById('hostTargetAksara').innerText = currentQuestion.aksara;
 
   Object.keys(hostConnMap).forEach(peerId => {
-    hostConnMap[peerId].wordIdx = 0;
     hostConnMap[peerId].progressPercent = 0;
     hostConnMap[peerId].finished = false;
     hostConnMap[peerId].finishTime = null;
@@ -387,7 +384,6 @@ function resetForNewGameHost() {
     hostConnMap[peerId].totalTimeSpent = 0;
     hostConnMap[peerId].fastestTime = null;
     hostConnMap[peerId].lastQuestionTime = 0;
-    hostConnMap[peerId].wordIdx = 0;
     hostConnMap[peerId].progressPercent = 0;
     hostConnMap[peerId].finished = false;
   });
@@ -445,9 +441,10 @@ function handlePlayerIncomingData(data) {
   if (data.type === 'START_QUESTION') {
     document.getElementById('podiumModal').classList.remove('active');
     currentQuestion = data.question;
+    currentQuestionIndex = data.questionIndex;
+    totalRaceQuestions = data.totalQuestions;
     questionStartTime = Date.now();
     playerTypedText = '';
-    playerCurrentWordIdx = 0;
     playerIsFinished = false;
 
     renderPlayerGameScreen();
@@ -465,27 +462,18 @@ function handlePlayerIncomingData(data) {
 function renderPlayerGameScreen() {
   if (!currentQuestion) return;
 
-  const totalWords = currentQuestion.words.length;
-  document.getElementById('pCurrentWordIdx').innerText = playerCurrentWordIdx + 1;
-  document.getElementById('pTotalWords').innerText = totalWords;
+  document.getElementById('pCurrentQIdx').innerText = currentQuestionIndex + 1;
+  document.getElementById('pTotalQ').innerText = totalRaceQuestions || activeQuestions.length;
   document.getElementById('pTypedDisplay').innerText = '';
-  document.getElementById('pPosIndicator').innerText = `Kata ${playerCurrentWordIdx + 1}/${totalWords}`;
+  document.getElementById('pPosIndicator').innerText = `Progress: 0%`;
   
   updatePlayerProgressBar(0);
 
-  const latinContainer = document.getElementById('pLatinWords');
-  latinContainer.innerHTML = currentQuestion.words.map((w, idx) => {
-    const activeCls = idx === playerCurrentWordIdx ? 'active-word' : '';
-    return `<span class="${activeCls}">${w.latin}</span>`;
-  }).join(' ');
-
-  // Scripto continua (join Tanpa Spasi)
-  const aksaraContainer = document.getElementById('pAksaraWords');
-  aksaraContainer.innerHTML = currentQuestion.words.map((w, idx) => {
-    if (idx < playerCurrentWordIdx) return `<span class="completed">${w.aksara}</span>`;
-    if (idx === playerCurrentWordIdx) return `<span class="current">${w.aksara}</span>`;
-    return `<span>${w.aksara}</span>`;
-  }).join('');
+  // Teks Latin menampilkan spasi
+  document.getElementById('pLatinWords').innerText = currentQuestion.latin;
+  
+  // Teks Aksara Jawa ditampilkan utuh
+  document.getElementById('pAksaraWords').innerText = currentQuestion.aksara;
 }
 
 function setupVirtualKeyboard() {
@@ -500,15 +488,16 @@ function setupVirtualKeyboard() {
   document.getElementById('btnKbClear').addEventListener('click', () => {
     playerTypedText = '';
     updateTypedDisplay();
+    checkAnswerAndAdvance(false);
   });
-  document.getElementById('btnKbSpace').addEventListener('click', () => checkWordMatchAndAdvance(true));
+  document.getElementById('btnKbSpace').addEventListener('click', () => checkAnswerAndAdvance(true));
 }
 
 function appendPlayerChar(char) {
   if (playerIsFinished) return;
   playerTypedText += char;
   updateTypedDisplay();
-  checkWordMatchAndAdvance(false);
+  checkAnswerAndAdvance(false);
 }
 
 function removePlayerChar() {
@@ -517,58 +506,59 @@ function removePlayerChar() {
   chars.pop();
   playerTypedText = chars.join('');
   updateTypedDisplay();
+  checkAnswerAndAdvance(false);
 }
 
 function updateTypedDisplay() {
   document.getElementById('pTypedDisplay').innerText = playerTypedText;
 }
 
-function checkWordMatchAndAdvance(forcedBySpace) {
+function checkAnswerAndAdvance(forcedBySubmit) {
   if (playerIsFinished || !currentQuestion) return;
 
-  const currentTargetWord = currentQuestion.words[playerCurrentWordIdx];
-  if (!currentTargetWord) return;
-
-  const targetAksara = currentTargetWord.aksara.trim();
+  const targetAksara = currentQuestion.aksara.trim();
   const typedTrimmed = playerTypedText.trim();
 
-  if (typedTrimmed === targetAksara || (forcedBySpace && typedTrimmed === targetAksara)) {
-    playerCurrentWordIdx++;
-    playerTypedText = '';
-    updateTypedDisplay();
-
-    const totalWords = currentQuestion.words.length;
-    const progressPercent = (playerCurrentWordIdx / totalWords) * 100;
-    updatePlayerProgressBar(progressPercent);
-
-    if (playerCurrentWordIdx >= totalWords) {
-      playerIsFinished = true;
-      const timeSpent = Math.max(1, Math.round((Date.now() - questionStartTime) / 1000));
-      document.getElementById('pPosIndicator').innerText = `FINISH 🏁 (${timeSpent}s)`;
-
-      if (playerConn && playerConn.open) {
-        playerConn.send({
-          type: 'PROGRESS',
-          wordIdx: playerCurrentWordIdx,
-          progressPercent: 100,
-          timeSpent: timeSpent
-        });
-      }
+  // Hitung jumlah karakter yang cocok dari awal
+  const targetChars = Array.from(targetAksara);
+  const typedChars = Array.from(typedTrimmed);
+  
+  let matchedCount = 0;
+  for (let i = 0; i < typedChars.length && i < targetChars.length; i++) {
+    if (typedChars[i] === targetChars[i]) {
+      matchedCount++;
     } else {
-      document.getElementById('pPosIndicator').innerText = `Kata ${playerCurrentWordIdx + 1}/${totalWords}`;
-      if (playerConn && playerConn.open) {
-        playerConn.send({
-          type: 'PROGRESS',
-          wordIdx: playerCurrentWordIdx,
-          progressPercent: progressPercent
-        });
-      }
-    }
-
-    if (!playerIsFinished) {
-      renderPlayerGameScreen();
+      break;
     }
   }
+
+  let progressPercent = Math.min(99, Math.round((matchedCount / targetChars.length) * 100));
+
+  // Otomatis Selesai jika teks tepat cocok 100%
+  if (typedTrimmed === targetAksara || (forcedBySubmit && typedTrimmed === targetAksara)) {
+    progressPercent = 100;
+    playerIsFinished = true;
+    const timeSpent = Math.max(1, Math.round((Date.now() - questionStartTime) / 1000));
+    document.getElementById('pPosIndicator').innerText = `FINISH 🏁 (${timeSpent}s)`;
+
+    if (playerConn && playerConn.open) {
+      playerConn.send({
+        type: 'PROGRESS',
+        progressPercent: 100,
+        timeSpent: timeSpent
+      });
+    }
+  } else {
+    document.getElementById('pPosIndicator').innerText = `Progress: ${progressPercent}%`;
+    if (playerConn && playerConn.open) {
+      playerConn.send({
+        type: 'PROGRESS',
+        progressPercent: progressPercent
+      });
+    }
+  }
+
+  updatePlayerProgressBar(progressPercent);
 }
 
 function updatePlayerProgressBar(percent) {
