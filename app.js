@@ -1,17 +1,16 @@
 /**
  * Balap Ketik Aksara Jawa - Core Application Logic
- * Supports Real-time Multi-device PeerJS Network with Point System & Anytime Finish
  */
 
 let soalData = [];
 let peer = null;
-let hostConnMap = {}; // { connId: { conn, name, avatar, wordIdx, progressPercent, finished, finishTime, score } }
+let hostConnMap = {}; 
 let role = null;
 let roomCode = '';
 let activeQuestions = [];
 let currentQuestionIndex = 0;
 let currentQuestion = null;
-let isRoundScored = false;
+let questionStartTime = 0;
 
 // Player State
 let playerProfile = { name: '', avatar: '🏎️' };
@@ -79,6 +78,15 @@ function generateRoomCode() {
   return code;
 }
 
+function formatDuration(totalSeconds) {
+  if (totalSeconds < 60) {
+    return `${totalSeconds}s`;
+  }
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}m ${secs}s`;
+}
+
 function setupEventListeners() {
   document.getElementById('btnStartHost').addEventListener('click', initHostMode);
   document.getElementById('btnGoJoin').addEventListener('click', () => showView('join'));
@@ -114,6 +122,7 @@ function setupEventListeners() {
   document.getElementById('btnStartRace').addEventListener('click', startRaceHost);
   document.getElementById('btnNextQuestion').addEventListener('click', nextQuestionHost);
   document.getElementById('btnEndRace').addEventListener('click', endRaceHost);
+  document.getElementById('btnStartNewGame').addEventListener('click', resetForNewGameHost);
 
   setupVirtualKeyboard();
 }
@@ -151,7 +160,10 @@ function handleHostIncomingData(conn, data) {
       progressPercent: 0,
       finished: false,
       finishTime: null,
-      score: 0
+      score: 0,
+      lastQuestionTime: 0,
+      totalTimeSpent: 0,
+      fastestTime: null
     };
 
     updateHostPlayerCount();
@@ -159,16 +171,31 @@ function handleHostIncomingData(conn, data) {
     conn.send({ type: 'JOINED_SUCCESS', roomCode: roomCode });
   } 
   else if (data.type === 'PROGRESS') {
-    if (hostConnMap[conn.peer]) {
-      hostConnMap[conn.peer].wordIdx = data.wordIdx;
-      hostConnMap[conn.peer].progressPercent = data.progressPercent;
+    const player = hostConnMap[conn.peer];
+    if (player) {
+      player.wordIdx = data.wordIdx;
+      player.progressPercent = data.progressPercent;
       
       updatePlayerTrackPosition(conn.peer, data.progressPercent);
 
-      if (data.progressPercent >= 100 && !hostConnMap[conn.peer].finished) {
-        hostConnMap[conn.peer].finished = true;
-        hostConnMap[conn.peer].finishTime = Date.now();
-        checkRaceCompletion();
+      if (data.progressPercent >= 100 && !player.finished) {
+        player.finished = true;
+        player.finishTime = Date.now();
+        
+        const timeSpent = data.timeSpent || Math.max(1, Math.round((Date.now() - questionStartTime) / 1000));
+        player.lastQuestionTime = timeSpent;
+        player.totalTimeSpent += timeSpent;
+        
+        if (player.fastestTime === null || timeSpent < player.fastestTime) {
+          player.fastestTime = timeSpent;
+        }
+
+        const finishedCount = Object.values(hostConnMap).filter(p => p.finished).length;
+        const pointTable = [100, 80, 60, 50, 40, 30, 20, 10];
+        const addScore = pointTable[finishedCount - 1] || 10;
+        player.score += addScore;
+
+        renderRaceTrack();
       }
     }
   }
@@ -203,8 +230,9 @@ function renderRaceTrack() {
     lane.className = 'race-lane';
     lane.id = `lane-${p.conn.peer}`;
 
+    const timeLabel = p.lastQuestionTime > 0 ? ` (${p.lastQuestionTime}s)` : '';
     lane.innerHTML = `
-      <div class="lane-player-info">${p.avatar} ${p.name} (${p.score || 0} Pts)</div>
+      <div class="lane-player-info">${p.avatar} ${p.name} - ${p.score || 0} Pts${timeLabel}</div>
       <div class="lane-avatar" id="avatar-${p.conn.peer}" style="left: 10px;">${p.avatar}</div>
       <div class="lane-finish-line"></div>
     `;
@@ -239,14 +267,16 @@ function startRaceHost() {
 
   broadcastQuestionToPlayers();
 
+  document.getElementById('levelSelectorBox').style.display = 'none';
   document.getElementById('btnStartRace').style.display = 'none';
   document.getElementById('btnNextQuestion').style.display = 'inline-block';
   document.getElementById('btnEndRace').style.display = 'inline-block';
+  document.getElementById('btnStartNewGame').style.display = 'none';
 }
 
 function broadcastQuestionToPlayers() {
   currentQuestion = activeQuestions[currentQuestionIndex];
-  isRoundScored = false;
+  questionStartTime = Date.now();
 
   document.getElementById('hostTargetLatin').innerText = `Soal ${currentQuestionIndex + 1}/${activeQuestions.length} - ${currentQuestion.title}: "${currentQuestion.latin}"`;
   document.getElementById('hostTargetAksara').innerText = currentQuestion.aksara;
@@ -256,6 +286,7 @@ function broadcastQuestionToPlayers() {
     hostConnMap[peerId].progressPercent = 0;
     hostConnMap[peerId].finished = false;
     hostConnMap[peerId].finishTime = null;
+    hostConnMap[peerId].lastQuestionTime = 0;
     updatePlayerTrackPosition(peerId, 0);
   });
 
@@ -274,94 +305,107 @@ function broadcastQuestionToPlayers() {
 }
 
 function nextQuestionHost() {
-  if (!isRoundScored) calculateRoundPoints();
-
   if (currentQuestionIndex + 1 < activeQuestions.length) {
     currentQuestionIndex++;
     broadcastQuestionToPlayers();
   } else {
-    showPodiumWinner(true);
+    endRaceHost();
   }
 }
 
 function endRaceHost() {
-  if (confirm("Apakah Anda yakin ingin mengakhiri permainan sekarang dan menampilkan Klasemen Akhir?")) {
-    if (!isRoundScored) calculateRoundPoints();
-    showPodiumWinner(true);
-  }
-}
-
-function checkRaceCompletion() {
   const players = Object.values(hostConnMap);
-  const allFinished = players.length > 0 && players.every(p => p.finished);
+  players.sort((a, b) => b.score - a.score || a.totalTimeSpent - b.totalTimeSpent);
 
-  if (allFinished) {
-    setTimeout(() => {
-      calculateRoundPoints();
-      showPodiumWinner(false);
-    }, 800);
-  }
-}
+  const leaderboardData = players.map((p, index) => ({
+    rank: index + 1,
+    name: p.name,
+    avatar: p.avatar,
+    score: p.score,
+    totalTimeSpent: p.totalTimeSpent,
+    fastestTime: p.fastestTime
+  }));
 
-function calculateRoundPoints() {
-  if (isRoundScored) return;
+  renderLeaderboardModal(leaderboardData, true);
 
-  const players = Object.values(hostConnMap);
-  if (players.length === 0) return;
-
-  players.sort((a, b) => {
-    if (a.finished && b.finished) return a.finishTime - b.finishTime;
-    if (a.finished) return -1;
-    if (b.finished) return 1;
-    return b.progressPercent - a.progressPercent;
+  Object.values(hostConnMap).forEach(p => {
+    p.conn.send({
+      type: 'GAME_ENDED',
+      leaderboard: leaderboardData
+    });
   });
 
-  const finishPoinTable = [100, 80, 60, 50, 40, 30, 20, 10];
-  players.forEach((p, idx) => {
-    let addPoints = 0;
-    if (p.finished) {
-      addPoints = finishPoinTable[idx] || 10;
-    } else {
-      addPoints = Math.round(p.progressPercent / 2);
-    }
-    p.score = (p.score || 0) + addPoints;
-  });
-
-  isRoundScored = true;
+  document.getElementById('btnNextQuestion').style.display = 'none';
+  document.getElementById('btnEndRace').style.display = 'none';
+  document.getElementById('btnStartNewGame').style.display = 'inline-block';
 }
 
-function showPodiumWinner(isFinal = false) {
-  if (!isRoundScored) calculateRoundPoints();
-
-  const players = Object.values(hostConnMap);
-  if (players.length === 0) return;
-
-  players.sort((a, b) => b.score - a.score);
-
+function renderLeaderboardModal(leaderboardData, isHost = false) {
   const listContainer = document.getElementById('podiumList');
   listContainer.innerHTML = '';
 
-  players.forEach((p, index) => {
+  leaderboardData.forEach((p) => {
     const item = document.createElement('div');
     let rankClass = '';
-    let medal = `#${index + 1}`;
-    if (index === 0) { rankClass = 'first'; medal = '👑 Juara 1'; }
-    else if (index === 1) { rankClass = 'second'; medal = '🥈 Juara 2'; }
-    else if (index === 2) { rankClass = 'third'; medal = '🥉 Juara 3'; }
+    let medal = `#${p.rank}`;
+    if (p.rank === 1) { rankClass = 'first'; medal = '👑 Juara 1'; }
+    else if (p.rank === 2) { rankClass = 'second'; medal = '🥈 Juara 2'; }
+    else if (p.rank === 3) { rankClass = 'third'; medal = '🥉 Juara 3'; }
+
+    const formattedTotalTime = formatDuration(p.totalTimeSpent || 0);
+    const formattedFastest = p.fastestTime ? `${p.fastestTime}s` : '-';
 
     item.className = `podium-item ${rankClass}`;
     item.innerHTML = `
       <div>${medal} - ${p.avatar} ${p.name}</div>
-      <div style="color: var(--accent); font-weight: 800; font-size: 1.1rem;">${p.score} PTS</div>
+      <div class="podium-details">
+        <div style="color: var(--accent); font-weight: 800; font-size: 1.1rem;">${p.score} PTS</div>
+        <div style="color: var(--text-sub); font-size: 0.75rem;">Total: <b>${formattedTotalTime}</b> | Tercepat: <b>${formattedFastest}</b></div>
+      </div>
     `;
     listContainer.appendChild(item);
   });
 
-  document.getElementById('podiumHeaderTitle').innerText = isFinal ? "🏆 KLASEMEN AKHIR PERMAINAN 🏆" : "📊 KLASEMEN POIN SEMENTARA";
-  document.getElementById('podiumTitle').innerText = isFinal ? "Permainan Telah Diakhiri oleh Guru" : `Hasil Poin Ronde Soal ${currentQuestionIndex + 1}`;
+  document.getElementById('podiumHeaderTitle').innerText = "🏆 KLASEMEN AKHIR 🏆";
+  document.getElementById('podiumTitle').innerText = "Permainan Telah Diakhiri";
+  
+  const closeBtn = document.getElementById('btnClosePodium');
+  if (!isHost) {
+    closeBtn.style.display = 'none';
+  } else {
+    closeBtn.style.display = 'inline-block';
+  }
+
   document.getElementById('podiumModal').classList.add('active');
+}
+
+function resetForNewGameHost() {
+  document.getElementById('podiumModal').classList.remove('active');
+
+  Object.keys(hostConnMap).forEach(peerId => {
+    hostConnMap[peerId].score = 0;
+    hostConnMap[peerId].totalTimeSpent = 0;
+    hostConnMap[peerId].fastestTime = null;
+    hostConnMap[peerId].lastQuestionTime = 0;
+    hostConnMap[peerId].wordIdx = 0;
+    hostConnMap[peerId].progressPercent = 0;
+    hostConnMap[peerId].finished = false;
+  });
+
+  Object.values(hostConnMap).forEach(p => {
+    p.conn.send({ type: 'RESET_TO_LOBBY' });
+  });
+
+  document.getElementById('hostTargetLatin').innerText = "Menunggu balapan baru dimulai...";
+  document.getElementById('hostTargetAksara').innerText = "ꦱꦸꦒꦼꦁꦫꦮꦸꦃ";
 
   renderRaceTrack();
+
+  document.getElementById('levelSelectorBox').style.display = 'block';
+  document.getElementById('btnStartRace').style.display = 'inline-block';
+  document.getElementById('btnStartNewGame').style.display = 'none';
+  document.getElementById('btnNextQuestion').style.display = 'none';
+  document.getElementById('btnEndRace').style.display = 'none';
 }
 
 // ================= PLAYER MODE =================
@@ -399,13 +443,22 @@ function initPlayerMode(code, name) {
 
 function handlePlayerIncomingData(data) {
   if (data.type === 'START_QUESTION') {
+    document.getElementById('podiumModal').classList.remove('active');
     currentQuestion = data.question;
+    questionStartTime = Date.now();
     playerTypedText = '';
     playerCurrentWordIdx = 0;
     playerIsFinished = false;
 
     renderPlayerGameScreen();
     showView('playerGame');
+  } 
+  else if (data.type === 'GAME_ENDED') {
+    renderLeaderboardModal(data.leaderboard, false);
+  }
+  else if (data.type === 'RESET_TO_LOBBY') {
+    document.getElementById('podiumModal').classList.remove('active');
+    showView('playerWaiting');
   }
 }
 
@@ -426,12 +479,13 @@ function renderPlayerGameScreen() {
     return `<span class="${activeCls}">${w.latin}</span>`;
   }).join(' ');
 
+  // Scripto continua (join Tanpa Spasi)
   const aksaraContainer = document.getElementById('pAksaraWords');
   aksaraContainer.innerHTML = currentQuestion.words.map((w, idx) => {
     if (idx < playerCurrentWordIdx) return `<span class="completed">${w.aksara}</span>`;
     if (idx === playerCurrentWordIdx) return `<span class="current">${w.aksara}</span>`;
     return `<span>${w.aksara}</span>`;
-  }).join(' ');
+  }).join('');
 }
 
 function setupVirtualKeyboard() {
@@ -489,17 +543,26 @@ function checkWordMatchAndAdvance(forcedBySpace) {
 
     if (playerCurrentWordIdx >= totalWords) {
       playerIsFinished = true;
-      document.getElementById('pPosIndicator').innerText = "FINISH 🏁";
+      const timeSpent = Math.max(1, Math.round((Date.now() - questionStartTime) / 1000));
+      document.getElementById('pPosIndicator').innerText = `FINISH 🏁 (${timeSpent}s)`;
+
+      if (playerConn && playerConn.open) {
+        playerConn.send({
+          type: 'PROGRESS',
+          wordIdx: playerCurrentWordIdx,
+          progressPercent: 100,
+          timeSpent: timeSpent
+        });
+      }
     } else {
       document.getElementById('pPosIndicator').innerText = `Kata ${playerCurrentWordIdx + 1}/${totalWords}`;
-    }
-
-    if (playerConn && playerConn.open) {
-      playerConn.send({
-        type: 'PROGRESS',
-        wordIdx: playerCurrentWordIdx,
-        progressPercent: progressPercent
-      });
+      if (playerConn && playerConn.open) {
+        playerConn.send({
+          type: 'PROGRESS',
+          wordIdx: playerCurrentWordIdx,
+          progressPercent: progressPercent
+        });
+      }
     }
 
     if (!playerIsFinished) {
