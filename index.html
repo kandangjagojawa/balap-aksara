@@ -138,8 +138,8 @@
     <div id="v-player-game" class="view">
       <div class="card player-game-card">
         <div class="progress-header">
-          <span>Kata <b id="pCurrentWordIdx">1</b> dari <b id="pTotalWords">2</b></span>
-          <span style="color: var(--accent); font-weight: 700;" id="pPosIndicator">Posisi: -</span>
+          <span>Soal ke-<b id="pCurrentQIdx">1</b> dari <b id="pTotalQ">10</b></span>
+          <span style="color: var(--accent); font-weight: 700;" id="pPosIndicator">Progress: 0%</span>
         </div>
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" id="pProgressBar"></div>
@@ -209,7 +209,7 @@
 
           <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
             <button class="kb-key special" id="btnKbClear" style="flex: 1;">🗑️ Clear</button>
-            <button class="kb-key space-key" id="btnKbSpace" style="flex: 2;">␣ KATA BERIKUTNYA</button>
+            <button class="kb-key space-key" id="btnKbSpace" style="flex: 2;">🚀 KIRIM / CEK JAWABAN</button>
           </div>
         </div>
       </div>
@@ -237,7 +237,7 @@
         <h4>📱 Peran Siswa (Player):</h4>
         <ul style="margin-left: 1.2rem;">
           <li>Masuk menggunakan Kode Ruangan dan pilih avatar favorit.</li>
-          <li>Gunakan Papan Ketik Aksara Jawa Virtual untuk mengetik kata.</li>
+          <li>Ketik seluruh susunan Aksara Jawa dengan benar. Jawaban akan <b>otomatis terkirim</b> begitu ketikan tepat!</li>
           <li>Gunakan tombol <b>Pangkon (꧀)</b> sebelum huruf berikutnya untuk membentuk <i>Pasangan</i>.</li>
         </ul>
       </div>
