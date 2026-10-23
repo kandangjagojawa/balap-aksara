@@ -367,7 +367,6 @@ header {
   outline: none;
 }
 
-/* 20 Avatar Selector Grid */
 .avatar-picker {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -638,4 +637,9 @@ header {
 .podium-item.third {
   background: rgba(180, 83, 9, 0.2);
   border: 1px solid #b45309;
+}
+
+.podium-details {
+  text-align: right;
+  font-size: 0.85rem;
 }
