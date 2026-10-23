@@ -1,0 +1,206 @@
+[
+  {
+    "id": 1,
+    "level": 1,
+    "title": "Aksara Nglegena 1",
+    "latin": "hana caraka",
+    "aksara": "ꦲꦤ ꦕꦫꦏ",
+    "words": [
+      {
+        "latin": "hana",
+        "aksara": "ꦲꦤ"
+      },
+      {
+        "latin": "caraka",
+        "aksara": "ꦕꦫꦏ"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "level": 1,
+    "title": "Aksara Nglegena 2",
+    "latin": "data sawala",
+    "aksara": "ꦢꦠ ꦱꦮꦭ",
+    "words": [
+      {
+        "latin": "data",
+        "aksara": "ꦢꦠ"
+      },
+      {
+        "latin": "sawala",
+        "aksara": "ꦱꦮꦭ"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "level": 1,
+    "title": "Aksara Nglegena 3",
+    "latin": "padha jayanya",
+    "aksara": "ꦥꦝ ꦗꦪꦚ",
+    "words": [
+      {
+        "latin": "padha",
+        "aksara": "ꦥꦝ"
+      },
+      {
+        "latin": "jayanya",
+        "aksara": "ꦗꦪꦚ"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "level": 1,
+    "title": "Aksara Nglegena 4",
+    "latin": "maga bathanga",
+    "aksara": "ꦩꦒ ꦧꦛꦔ",
+    "words": [
+      {
+        "latin": "maga",
+        "aksara": "ꦩꦒ"
+      },
+      {
+        "latin": "bathanga",
+        "aksara": "ꦧꦛꦔ"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "level": 2,
+    "title": "Sandhangan Swara 1",
+    "latin": "tuku buku",
+    "aksara": "ꦠꦸꦏꦸ ꦧꦸꦏꦸ",
+    "words": [
+      {
+        "latin": "tuku",
+        "aksara": "ꦠꦸꦏꦸ"
+      },
+      {
+        "latin": "buku",
+        "aksara": "ꦧꦸꦏꦸ"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "level": 2,
+    "title": "Sandhangan Swara 2",
+    "latin": "siti soto",
+    "aksara": "ꦱꦶꦠꦶ ꦱꦺꦴꦠꦺꦴ",
+    "words": [
+      {
+        "latin": "siti",
+        "aksara": "ꦱꦶꦠꦶ"
+      },
+      {
+        "latin": "soto",
+        "aksara": "ꦱꦺꦴꦠꦺꦴ"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "level": 2,
+    "title": "Sandhangan Swara 3",
+    "latin": "sate sate",
+    "aksara": "ꦱꦠꦺ ꦱꦠꦺ",
+    "words": [
+      {
+        "latin": "sate",
+        "aksara": "ꦱꦠꦺ"
+      },
+      {
+        "latin": "sate",
+        "aksara": "ꦱꦠꦺ"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "level": 3,
+    "title": "Sandhangan Panyigeg 1",
+    "latin": "kangkung segar",
+    "aksara": "ꦏꦁꦏꦸꦁ ꦱꦼꦒꦂ",
+    "words": [
+      {
+        "latin": "kangkung",
+        "aksara": "ꦏꦁꦏꦸꦁ"
+      },
+      {
+        "latin": "segar",
+        "aksara": "ꦱꦼꦒꦂ"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "level": 3,
+    "title": "Sandhangan Panyigeg 2",
+    "latin": "gajah pasar",
+    "aksara": "ꦒꦗꦃ ꦥꦱꦂ",
+    "words": [
+      {
+        "latin": "gajah",
+        "aksara": "ꦒꦗꦃ"
+      },
+      {
+        "latin": "pasar",
+        "aksara": "ꦥꦱꦂ"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "level": 4,
+    "title": "Paribasan Jawa 1",
+    "latin": "rura basa",
+    "aksara": "ꦫꦸꦫ ꦧꦱ",
+    "words": [
+      {
+        "latin": "rura",
+        "aksara": "ꦫꦸꦫ"
+      },
+      {
+        "latin": "basa",
+        "aksara": "ꦧꦱ"
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "level": 4,
+    "title": "Paribasan Jawa 2",
+    "latin": "mangan roti",
+    "aksara": "ꦩꦔꦤ꧀ ꦫꦺꦴꦠꦶ",
+    "words": [
+      {
+        "latin": "mangan",
+        "aksara": "ꦩꦔꦤ꧀"
+      },
+      {
+        "latin": "roti",
+        "aksara": "ꦫꦺꦴꦠꦶ"
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "level": 4,
+    "title": "Unggah Ungguh",
+    "latin": "sugeng rawuh",
+    "aksara": "ꦱꦸꦒꦼꦁ ꦫꦮꦸꦃ",
+    "words": [
+      {
+        "latin": "sugeng",
+        "aksara": "ꦱꦸꦒꦼꦁ"
+      },
+      {
+        "latin": "rawuh",
+        "aksara": "ꦫꦮꦸꦃ"
+      }
+    ]
+  }
+]
