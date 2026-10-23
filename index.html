@@ -49,7 +49,7 @@
             <span class="player-count-badge" id="playerCountBadge">👥 0 Siswa Terhubung</span>
           </div>
 
-          <div class="level-selector">
+          <div class="level-selector" id="levelSelectorBox">
             <h4>Pilih Tingkat Kesulitan / Topik:</h4>
             <div class="level-checkboxes" id="levelContainer"></div>
           </div>
@@ -57,7 +57,8 @@
           <button class="btn-primary" id="btnStartRace">🚀 Mulai Balapan!</button>
           <button class="btn-primary btn-secondary" id="btnNextQuestion" style="display:none;">⏩ Soal Berikutnya</button>
           <button class="btn-primary btn-danger" id="btnEndRace" style="display:none; margin-top: 0.5rem;">🏁 Akhiri & Lihat Klasemen</button>
-          <button class="btn-primary btn-secondary" id="btnResetHost" style="margin-top: 0.5rem;">🔄 Kembali ke Menu</button>
+          <button class="btn-primary btn-accent" id="btnStartNewGame" style="display:none; margin-top: 0.5rem;">🔄 Mulai Game Baru</button>
+          <button class="btn-primary btn-secondary" id="btnResetHost" style="margin-top: 0.5rem;">🏠 Kembali ke Menu Utama</button>
         </div>
 
         <div class="card arena-card">
@@ -159,7 +160,7 @@
           </div>
         </div>
 
-        <!-- Virtual Aksara Jawa Keyboard -->
+        <!-- Virtual Keyboard -->
         <div class="virtual-keyboard">
           <div class="kb-section-title">Aksara Nglegena (Dasar)</div>
           <div class="kb-grid">
@@ -223,12 +224,13 @@
         <ul style="margin-left: 1.2rem; margin-bottom: 1rem;">
           <li>Buka Ruang Balapan dan bagikan Kode Ruangan kepada siswa.</li>
           <li>Tekan <b>Mulai Balapan</b> dan perhatikan kemajuan siswa di proyektor.</li>
-          <li>Guru dapat menekan tombol <b>Akhiri & Lihat Klasemen</b> kapan saja untuk menyelesaikannya.</li>
+          <li>Setiap soal akan mencatat poin dan durasi pengerjaan siswa.</li>
+          <li>Tekan <b>Akhiri & Lihat Klasemen</b> saat permainan telah selesai.</li>
         </ul>
         <h4>📱 Peran Siswa (Player):</h4>
         <ul style="margin-left: 1.2rem;">
-          <li>Masuk menggunakan Kode Ruangan dan pilih dari 20 avatar unik.</li>
-          <li>Gunakan Papan Ketik Aksara Jawa Virtual untuk mengetik teks yang diperintahkan.</li>
+          <li>Masuk menggunakan Kode Ruangan dan pilih avatar favorit.</li>
+          <li>Gunakan Papan Ketik Aksara Jawa Virtual untuk mengetik teks.</li>
         </ul>
       </div>
     </div>
@@ -238,12 +240,12 @@
   <div class="modal" id="podiumModal">
     <div class="modal-content" style="text-align: center;">
       <div style="font-size: 3.5rem;">🏆</div>
-      <h2 id="podiumHeaderTitle">Klasemen Poin Sementara</h2>
-      <p style="color: var(--text-sub); margin-bottom: 1rem;" id="podiumTitle">Ronde Selesai</p>
+      <h2 id="podiumHeaderTitle">Klasemen Akhir</h2>
+      <p style="color: var(--text-sub); margin-bottom: 1rem;" id="podiumTitle">Permainan Selesai</p>
       
       <div class="podium-list" id="podiumList"></div>
 
-      <button class="btn-primary" id="btnClosePodium" style="margin-top: 1rem;">Lanjutkan</button>
+      <button class="btn-primary" id="btnClosePodium" style="margin-top: 1rem;">Tutup Papan Skor</button>
     </div>
   </div>
 
