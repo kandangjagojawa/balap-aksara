@@ -42,30 +42,37 @@ async function loadSoalData() {
   try {
     const res = await fetch('soal.json');
     soalData = await res.json();
-    populateLevelCheckboxes();
+    populateQuestionCountDropdown();
   } catch (err) {
     console.error("Gagal memuat soal.json:", err);
     alert("Gagal memuat file soal.json. Pastikan file soal.json tersedia!");
   }
 }
 
-function populateLevelCheckboxes() {
-  const container = document.getElementById('levelContainer');
-  if (!container) return;
-  container.innerHTML = '';
+function populateQuestionCountDropdown() {
+  const select = document.getElementById('selectQuestionCount');
+  if (!select) return;
+  select.innerHTML = '';
 
-  const levels = [...new Set(soalData.map(s => s.level))].sort((a,b) => a - b);
-  levels.forEach(lvl => {
-    const levelSoalList = soalData.filter(s => s.level === lvl);
-    const titleName = levelSoalList[0]?.title || `Level ${lvl}`;
-    
-    const label = document.createElement('label');
-    label.innerHTML = `
-      <input type="checkbox" value="${lvl}" class="chk-level" checked>
-      Lvl ${lvl}: ${titleName} (${levelSoalList.length} Soal)
-    `;
-    container.appendChild(label);
+  const totalSoal = soalData.length;
+  const presets = [5, 10, 15, 20, 25];
+
+  // Tambahkan pilihan preset yang nilainya kurang dari total soal
+  presets.forEach(count => {
+    if (count < totalSoal) {
+      const opt = document.createElement('option');
+      opt.value = count;
+      opt.innerText = `${count} Soal`;
+      select.appendChild(opt);
+    }
   });
+
+  // Pilihan terakhir selalu "Semua Soal" dengan jumlah total dari JSON
+  const optAll = document.createElement('option');
+  optAll.value = totalSoal;
+  optAll.innerText = `Semua Soal (${totalSoal} Soal)`;
+  optAll.selected = true;
+  select.appendChild(optAll);
 }
 
 function showView(viewName) {
@@ -200,8 +207,22 @@ function handleHostIncomingData(conn, data) {
         player.score += addScore;
 
         renderRaceTrack();
+        checkAllPlayersFinishedHost();
       }
     }
+  }
+}
+
+function checkAllPlayersFinishedHost() {
+  const players = Object.values(hostConnMap);
+  if (players.length === 0) return;
+
+  const allFinished = players.every(p => p.finished);
+  if (allFinished) {
+    if (hostTimerInterval) clearInterval(hostTimerInterval);
+    setTimeout(() => {
+      nextQuestionHost();
+    }, 800);
   }
 }
 
@@ -253,27 +274,26 @@ function updatePlayerTrackPosition(peerId, percent) {
 }
 
 function startRaceHost() {
-  const selectedLevels = Array.from(document.querySelectorAll('.chk-level:checked')).map(cb => parseInt(cb.value));
-  
-  if (selectedLevels.length === 0) {
-    alert("Pilih minimal satu tingkat kesulitan!");
+  if (Object.keys(hostConnMap).length === 0) {
+    alert("Belum ada siswa yang terhubung!");
     return;
   }
 
   raceDuration = parseInt(document.getElementById('selectTimer').value) || 30;
+  const questionLimit = parseInt(document.getElementById('selectQuestionCount').value) || soalData.length;
 
-  activeQuestions = soalData.filter(s => selectedLevels.includes(s.level));
+  // Acak soal secara otomatis dan ambil sejumlah batas pilihan guru
+  activeQuestions = [...soalData].sort(() => Math.random() - 0.5).slice(0, questionLimit);
   if (activeQuestions.length === 0) {
     alert("Tidak ada soal tersedia!");
     return;
   }
 
-  activeQuestions.sort(() => Math.random() - 0.5);
   currentQuestionIndex = 0;
 
   broadcastQuestionToPlayers();
 
-  document.getElementById('levelSelectorBox').style.display = 'none';
+  document.getElementById('timerSelectorBox').style.display = 'none';
   document.getElementById('btnStartRace').style.display = 'none';
   document.getElementById('btnNextQuestion').style.display = 'inline-block';
   document.getElementById('btnEndRace').style.display = 'inline-block';
@@ -287,7 +307,6 @@ function broadcastQuestionToPlayers() {
   document.getElementById('hostTargetLatin').innerText = `Soal ${currentQuestionIndex + 1}/${activeQuestions.length} - ${currentQuestion.title}: "${currentQuestion.latin}"`;
   document.getElementById('hostTargetAksara').innerText = currentQuestion.aksara;
 
-  // Jalankan Timer Otomatis pada Host
   hostTimeLeft = raceDuration;
   document.getElementById('hostTimerBadge').style.display = 'inline-flex';
   document.getElementById('hostTimeLeft').innerText = hostTimeLeft;
@@ -299,7 +318,7 @@ function broadcastQuestionToPlayers() {
 
     if (hostTimeLeft <= 0) {
       clearInterval(hostTimerInterval);
-      nextQuestionHost(); // Otomatis lanjut soal saat durasi habis
+      nextQuestionHost();
     }
   }, 1000);
 
@@ -429,7 +448,7 @@ function resetForNewGameHost() {
 
   renderRaceTrack();
 
-  document.getElementById('levelSelectorBox').style.display = 'block';
+  document.getElementById('timerSelectorBox').style.display = 'block';
   document.getElementById('btnStartRace').style.display = 'inline-block';
   document.getElementById('btnStartNewGame').style.display = 'none';
   document.getElementById('btnNextQuestion').style.display = 'none';
@@ -479,7 +498,6 @@ function handlePlayerIncomingData(data) {
     playerTypedText = '';
     playerIsFinished = false;
 
-    // Timer Siswa
     let playerTimeLeft = data.duration || 30;
     document.getElementById('pTimeLeft').innerText = playerTimeLeft;
 
@@ -567,7 +585,6 @@ function checkAnswerAndAdvance() {
   const targetAksara = currentQuestion.aksara.trim();
   const typedTrimmed = playerTypedText.trim();
 
-  // Hitung persentase kecocokan karakter dari depan
   const targetChars = Array.from(targetAksara);
   const typedChars = Array.from(typedTrimmed);
   
@@ -582,13 +599,11 @@ function checkAnswerAndAdvance() {
 
   let progressPercent = Math.min(99, Math.round((matchedCount / targetChars.length) * 100));
 
-  // JIKA JAWABAN TEPAT 100% (BENAR)
   if (typedTrimmed === targetAksara) {
     progressPercent = 100;
     playerIsFinished = true;
     const timeSpent = Math.max(1, Math.round((Date.now() - questionStartTime) / 1000));
     
-    // Kosongkan hasil ketikan siswa seketika saat benar
     playerTypedText = '';
     updateTypedDisplay();
 
@@ -602,7 +617,6 @@ function checkAnswerAndAdvance() {
       });
     }
   } 
-  // JIKA JAWABAN BELUM TEPAT (Tetap simpan teks agar siswa bisa mengeditnya)
   else {
     document.getElementById('pPosIndicator').innerText = `Progress: ${progressPercent}%`;
     if (playerConn && playerConn.open) {
