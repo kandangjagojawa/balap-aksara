@@ -51,6 +51,13 @@
 
           <div class="level-selector" id="timerSelectorBox">
             <div class="form-group" style="margin-top: 0.5rem;">
+              <label>📝 Jumlah Soal per Babak:</label>
+              <select id="selectQuestionCount" class="form-input" style="padding: 0.5rem; font-size: 0.95rem;">
+                <!-- Diisi otomatis berdasarkan total data di soal.json -->
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 0.8rem;">
               <label>⏱️ Durasi per Soal:</label>
               <select id="selectTimer" class="form-input" style="padding: 0.5rem; font-size: 0.95rem;">
                 <option value="10">10 Detik</option>
@@ -246,7 +253,7 @@
         <br>
         <h4>👨‍🏫 Peran Guru (Host):</h4>
         <ul style="margin-left: 1.2rem; margin-bottom: 1rem;">
-          <li>Tentukan <b>Durasi per Soal</b>. Semua soal akan diacak otomatis.</li>
+          <li>Pilih <b>Jumlah Soal</b> dan <b>Durasi per Soal</b>.</li>
           <li>Tekan <b>Mulai Balapan</b>. Soal otomatis berganti jika waktu habis atau jika semua siswa sudah menjawab dengan benar!</li>
           <li>Tekan <b>Akhiri & Lihat Klasemen</b> saat permainan selesai.</li>
         </ul>
