@@ -52,6 +52,23 @@
           <div class="level-selector" id="levelSelectorBox">
             <h4>Pilih Tingkat Kesulitan / Topik:</h4>
             <div class="level-checkboxes" id="levelContainer"></div>
+
+            <div class="form-group" style="margin-top: 0.8rem;">
+              <label>⏱️ Durasi per Soal:</label>
+              <select id="selectTimer" class="form-input" style="padding: 0.5rem; font-size: 0.95rem;">
+                <option value="10">10 Detik</option>
+                <option value="15">15 Detik</option>
+                <option value="20">20 Detik</option>
+                <option value="25">25 Detik</option>
+                <option value="30" selected>30 Detik</option>
+                <option value="35">35 Detik</option>
+                <option value="40">40 Detik</option>
+                <option value="45">45 Detik</option>
+                <option value="50">50 Detik</option>
+                <option value="55">55 Detik</option>
+                <option value="60">60 Detik</option>
+              </select>
+            </div>
           </div>
 
           <button class="btn-primary" id="btnStartRace">🚀 Mulai Balapan!</button>
@@ -63,7 +80,10 @@
 
         <div class="card arena-card">
           <div class="target-banner">
-            <div class="target-latin" id="hostTargetLatin">Menunggu balapan dimulai...</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <div class="target-latin" id="hostTargetLatin">Menunggu balapan dimulai...</div>
+              <div id="hostTimerBadge" class="timer-badge" style="display:none;">⏱️ <span id="hostTimeLeft">30</span>s</div>
+            </div>
             <div class="target-aksara-large" id="hostTargetAksara">ꦱꦸꦒꦼꦁꦫꦮꦸꦃ</div>
           </div>
 
@@ -139,6 +159,7 @@
       <div class="card player-game-card">
         <div class="progress-header">
           <span>Soal ke-<b id="pCurrentQIdx">1</b> dari <b id="pTotalQ">10</b></span>
+          <span class="timer-badge">⏱️ <span id="pTimeLeft">30</span>s</span>
           <span style="color: var(--accent); font-weight: 700;" id="pPosIndicator">Progress: 0%</span>
         </div>
         <div class="progress-bar-bg">
@@ -208,8 +229,7 @@
           </div>
 
           <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-            <button class="kb-key special" id="btnKbClear" style="flex: 1;">🗑️ Clear</button>
-            <button class="kb-key space-key" id="btnKbSpace" style="flex: 2;">🚀 KIRIM / CEK JAWABAN</button>
+            <button class="kb-key special" id="btnKbClear" style="flex: 1;">🗑️ Hapus Semua (Clear)</button>
           </div>
         </div>
       </div>
@@ -229,15 +249,13 @@
         <br>
         <h4>👨‍🏫 Peran Guru (Host):</h4>
         <ul style="margin-left: 1.2rem; margin-bottom: 1rem;">
-          <li>Buka Ruang Balapan dan bagikan Kode Ruangan kepada siswa.</li>
-          <li>Tekan <b>Mulai Balapan</b> dan perhatikan kemajuan siswa di proyektor.</li>
-          <li>Penulisan Aksara Jawa bersifat <i>Scripto Continua</i> (tanpa spasi).</li>
-          <li>Tekan <b>Akhiri & Lihat Klasemen</b> saat permainan selesai.</li>
+          <li>Pilih tingkat kesulitan dan tentukan <b>Durasi per Soal</b>.</li>
+          <li>Tekan <b>Mulai Balapan</b>. Soal akan otomatis berpindah saat waktu habis!</li>
+          <li>Tekan <b>Akhiri & Lihat Klasemen</b> saat permainan telah selesai.</li>
         </ul>
         <h4>📱 Peran Siswa (Player):</h4>
         <ul style="margin-left: 1.2rem;">
-          <li>Masuk menggunakan Kode Ruangan dan pilih avatar favorit.</li>
-          <li>Ketik seluruh susunan Aksara Jawa dengan benar. Jawaban akan <b>otomatis terkirim</b> begitu ketikan tepat!</li>
+          <li>Ketik Aksara Jawa sesuai perintah soal. Jika benar 100%, jawaban akan <b>terkirim otomatis dan kolom ketikan langsung kosong</b>!</li>
           <li>Gunakan tombol <b>Pangkon (꧀)</b> sebelum huruf berikutnya untuk membentuk <i>Pasangan</i>.</li>
         </ul>
       </div>
